@@ -1,0 +1,10 @@
+fastapi[all]
+uvicorn
+sqlalchemy
+asyncpg
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv
+alembic # For database migrations
+psycopg2-binary # Fallback/alternative if asyncpg has issues, or for specific tooling
