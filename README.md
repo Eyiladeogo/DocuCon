@@ -1,4 +1,4 @@
-# Document Connector API
+# DocuCon API
 
 A simplified document connector and API service built with FastAPI. This service allows authenticated users to upload, retrieve, update, and delete documents, while simulating integration with a document system and vector embedding store. It also includes AI-context preparation through text extraction and chunking.
 
