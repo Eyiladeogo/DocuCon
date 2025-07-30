@@ -46,7 +46,7 @@ document_connector/
 ### 2. Clone and Install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Eyiladeogo/DocuCon
 cd document_connector
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
@@ -58,7 +58,7 @@ pip install -r requirements.txt
 Create a `.env` file based on `.env.example`:
 
 ```env
-DATABASE_URL="postgresql+asyncpg://user:password@localhost:5432/document_db"
+DATABASE_URL="postgresql+asyncpg://user:password@db_host:db_port/db_name"
 SECRET_KEY="your-secret"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=30
