@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
+
+from app.core.security import get_current_active_user
 from app.db.models import User
 from app.schemas.user import UserOut
-from app.core.security import get_current_active_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

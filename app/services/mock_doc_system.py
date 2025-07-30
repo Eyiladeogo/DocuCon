@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class MockDocumentSystem:

@@ -1,27 +1,22 @@
-from fastapi import APIRouter, Depends, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.future import select
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
-from app.db.database import get_db
-from app.db.models import User, Document, DocumentChunk
-from app.schemas.document import (
-    DocumentCreate,
-    DocumentOut,
-    DocumentUpdate,
-    DocumentChunkOut,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
+from app.core.exceptions import (DatabaseOperationException,
+                                 DocumentNotFoundException,
+                                 DocumentProcessingException,
+                                 ForbiddenException)
 from app.core.security import get_current_active_user
-from app.core.exceptions import (
-    DocumentNotFoundException,
-    DocumentProcessingException,
-    DatabaseOperationException,
-    ForbiddenException,
-)
-from app.services.mock_doc_system import mock_document_system
+from app.db.database import get_db
+from app.db.models import Document, DocumentChunk, User
+from app.schemas.document import (DocumentChunkOut, DocumentCreate,
+                                  DocumentOut, DocumentUpdate)
 from app.services.document_processor import document_processor
+from app.services.mock_doc_system import mock_document_system
 from app.services.vector_store import mock_vector_store
 
 router = APIRouter(prefix="/documents", tags=["Documents"])

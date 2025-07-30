@@ -1,15 +1,16 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
-from sqlalchemy.pool import NullPool  # Import NullPool for better test isolation
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import \
+    NullPool  # Import NullPool for better test isolation
 
-from app.main import app
-from app.db.database import get_db, Base
-from app.db.models import User
 from app.core.config import settings
 from app.core.security import get_current_user, get_password_hash
+from app.db.database import Base, get_db
+from app.db.models import User
+from app.main import app
 
 # Use the test database URL from settings
 TEST_DATABASE_URL = settings.TEST_DATABASE_URL

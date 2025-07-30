@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 import logging
 
-from app.api import auth, users, documents
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+
+from app.api import auth, documents, users
 from app.core.config import settings
 from app.core.exceptions import DocumentConnectorException
 

@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.db.models import User, Document, DocumentChunk
+from app.db.models import Document, DocumentChunk, User
 
 # Removed imports for get_password_hash, mock_document_system, mock_vector_store
 # as they are not directly used in the tests or are handled by conftest.py or mocks.
