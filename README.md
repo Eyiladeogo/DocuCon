@@ -146,6 +146,21 @@ Run all tests using:
 pytest tests/
 ```
 
+> **Troubleshooting:**
+> If you get errors like `ModuleNotFoundError: No module named 'app'` when running tests, set your project root as the `PYTHONPATH` environment variable. For example:
+>
+> **In bash or zsh:**
+>
+> ```bash
+> export PYTHONPATH="$(pwd)"
+> ```
+>
+> **In PowerShell:**
+>
+> ```powershell
+> $env:PYTHONPATH = "$(Get-Location)"
+> ```
+
 Test coverage includes:
 
 - Token generation and auth flows
