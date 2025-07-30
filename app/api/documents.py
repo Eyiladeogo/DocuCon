@@ -6,15 +6,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import (DatabaseOperationException,
-                                 DocumentNotFoundException,
-                                 DocumentProcessingException,
-                                 ForbiddenException)
+from app.core.exceptions import (
+    DatabaseOperationException,
+    DocumentNotFoundException,
+    DocumentProcessingException,
+    ForbiddenException,
+)
 from app.core.security import get_current_active_user
 from app.db.database import get_db
 from app.db.models import Document, DocumentChunk, User
-from app.schemas.document import (DocumentChunkOut, DocumentCreate,
-                                  DocumentOut, DocumentUpdate)
+from app.schemas.document import (
+    DocumentChunkOut,
+    DocumentCreate,
+    DocumentOut,
+    DocumentUpdate,
+)
 from app.services.document_processor import document_processor
 from app.services.mock_doc_system import mock_document_system
 from app.services.vector_store import mock_vector_store
@@ -76,9 +82,6 @@ async def create_document(
         await db.refresh(
             db_document
         )  # Refresh to get updated processed_at and relationships
-
-        # Load chunks to be included in the response model if needed, though DocumentOut doesn't include them
-        # await db.refresh(db_document, attribute_names=["chunks"])
 
         print(
             f"Document '{doc_in.title}' created and processed for user {current_user.email}"

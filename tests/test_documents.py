@@ -5,14 +5,6 @@ from sqlalchemy.future import select
 
 from app.db.models import Document, DocumentChunk, User
 
-# Removed imports for get_password_hash, mock_document_system, mock_vector_store
-# as they are not directly used in the tests or are handled by conftest.py or mocks.
-
-
-# The 'client', 'db_session', and 'authenticated_client' fixtures are now in conftest.py
-# and will be automatically discovered by pytest.
-# The custom 'authenticated_client' fixture that was here is now moved to conftest.py.
-
 
 @pytest.mark.asyncio
 async def test_create_document(
@@ -118,8 +110,8 @@ async def test_get_document_unauthorized(client: AsyncClient, db_session: AsyncS
 
     # Use the base client (unauthenticated) to try and access the document
     response = await client.get(f"/documents/{doc.id}")
-    assert response.status_code == 401  # Or 403, depending on your app's exact logic
-    assert response.json()["detail"] == "Not authenticated"  # Or "Not authorized"
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
@@ -152,9 +144,6 @@ async def test_update_document_content_reprocesses(
     authenticated_client: AsyncClient, db_session: AsyncSession
 ):
     """Test updating document content triggers reprocessing (mocked)."""
-    # This test assumes your backend has logic to reprocess content when updated.
-    # We'll rely on the mock_document_system and mock_vector_store for this.
-
     # First, create a document with initial content
     initial_content = "Original content for chunking."
     create_response = await authenticated_client.post(
@@ -168,9 +157,7 @@ async def test_update_document_content_reprocesses(
     )
     assert initial_chunks_response.status_code == 200
     assert len(initial_chunks_response.json()) > 0
-    assert (
-        initial_chunks_response.json()[0]["chunk_text"] == initial_content
-    )  # Assuming simple chunking
+    assert initial_chunks_response.json()[0]["chunk_text"] == initial_content
 
     # Update the document content
     updated_content = "Updated content for new chunks."
@@ -188,9 +175,7 @@ async def test_update_document_content_reprocesses(
     )
     assert updated_chunks_response.status_code == 200
     assert len(updated_chunks_response.json()) > 0
-    assert (
-        updated_chunks_response.json()[0]["chunk_text"] == updated_content
-    )  # Assuming simple chunking
+    assert updated_chunks_response.json()[0]["chunk_text"] == updated_content
 
 
 @pytest.mark.asyncio
@@ -204,7 +189,7 @@ async def test_delete_document(
     doc_id = create_response.json()["id"]
 
     response = await authenticated_client.delete(f"/documents/{doc_id}")
-    assert response.status_code == 204  # No Content for successful deletion
+    assert response.status_code == 204
 
     # Verify document is deleted from DB
     result = await db_session.execute(select(Document).where(Document.id == doc_id))
@@ -237,21 +222,14 @@ async def test_get_document_chunks(
         title="Chunked Doc",
         content="Chunk 1. Chunk 2. Chunk 3.",
         owner_id=test_user.id,
-        mock_system_id="mock_chunks",  # Assuming this is used for mocking chunking
+        mock_system_id="mock_chunks",
     )
     db_session.add(doc_with_chunks)
     await db_session.flush()  # Flush to get the document ID before adding chunks
 
     # Manually add chunks to ensure they exist for this test.
-    # In a real scenario, this would be handled by your document processing service.
     chunk_texts = ["Chunk 1.", "Chunk 2.", "Chunk 3."]
     for i, text in enumerate(chunk_texts):
-        # Assuming mock_vector_store and generate_mock_embedding are available
-        # You might need to mock these services if they are not simple functions
-        # or if they involve external calls.
-        # For simplicity, let's assume direct creation of chunks for testing DB interaction.
-        # If your actual app creates embeddings, you'd mock that service.
-        # For now, we'll just create the DocumentChunk directly.
         db_session.add(
             DocumentChunk(
                 document_id=doc_with_chunks.id,

@@ -3,8 +3,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import (async_engine_from_config,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import async_engine_from_config, create_async_engine
 
 import app.db.models  # Import models to ensure they are registered with SQLAlchemy
 from app.core.config import settings
@@ -77,7 +76,6 @@ async def run_async_migrations() -> None:
         poolclass=pool.NullPool,  # Important for Alembic's autogenerate to not block
     )
 
-    # THIS IS THE KEY CHANGE: Use async with for the connection
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
 

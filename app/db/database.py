@@ -4,14 +4,11 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
 from app.core.exceptions import DatabaseOperationException
 
-# Create an asynchronous engine
-# connect_args={"check_same_thread": False} is for SQLite, not strictly needed for PostgreSQL
-# but often seen in examples. For asyncpg, it's not relevant.
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=True,  # Set to False in production for less verbose logging
-    pool_size=10,  # Adjust based on expected load
-    max_overflow=20,  # Adjust based on expected load
+    pool_size=10,
+    max_overflow=20,
 )
 
 # Create an asynchronous session local

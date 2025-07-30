@@ -3,13 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-# No need to import app, get_db, Base, settings, get_current_user, get_password_hash here
-# as they are handled by conftest.py fixtures or are not directly used in the tests.
 from app.db.models import User
-
-# Fixtures are now in conftest.py, no need to define them here.
-# The 'client', 'db_session', and 'authenticated_client' fixtures
-# will be automatically discovered by pytest.
 
 
 @pytest.mark.asyncio
@@ -113,7 +107,7 @@ async def test_read_users_me_authenticated(
     response = await authenticated_client.get("/users/me")
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "docuser@example.com"  # Should match the mock user email
+    assert data["email"] == "docuser@example.com"
     assert "id" in data
 
 
@@ -124,6 +118,4 @@ async def test_read_users_me_unauthenticated(client: AsyncClient):
     # Therefore, it should correctly return 401 Unauthorized.
     response = await client.get("/users/me")
     assert response.status_code == 401
-    assert (
-        response.json()["detail"] == "Not authenticated"
-    )  # Assuming your app returns this detail for 401
+    assert response.json()["detail"] == "Not authenticated"
