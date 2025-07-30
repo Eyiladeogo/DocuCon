@@ -1,84 +1,15 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.main import app
-from app.db.database import get_db, Base
+# No need to import app, get_db, Base, settings, get_current_user, get_password_hash here
+# as they are handled by conftest.py fixtures or are not directly used in the tests.
 from app.db.models import User
-from app.core.config import settings
-from app.core.security import get_current_user, get_password_hash
 
-# Use a separate test database URL
-TEST_DATABASE_URL = settings.TEST_DATABASE_URL
-
-# Create a test engine and session
-test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-TestAsyncSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=test_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def setup_test_db():
-    """
-    Fixture to set up and tear down the test database.
-    Creates all tables before tests and drops them after.
-    """
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture(scope="function")
-async def db_session():
-    """
-    Fixture to provide a clean database session for each test function.
-    Rolls back transactions after each test.
-    """
-    async with TestAsyncSessionLocal() as session:
-        yield session
-        await session.rollback()  # Rollback changes after each test
-
-
-@pytest.fixture(scope="function")
-async def client(db_session: AsyncSession):
-    """
-    Fixture to provide an AsyncClient for testing FastAPI endpoints.
-    Overrides the get_db dependency to use the test session.
-    Overrides get_current_user to allow testing protected routes without full auth flow.
-    """
-
-    async def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-
-    # For testing protected routes, we will need a mock user
-    async def override_get_current_user():
-        # Create a mock user for tests that require authentication
-        test_user = User(
-            id=1,
-            email="testuser@example.com",
-            hashed_password=get_password_hash("testpassword"),
-            is_active=True,
-        )
-        return test_user
-
-    app.dependency_overrides[get_current_user] = override_get_current_user
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-
-    # Clean up overrides after tests
-    app.dependency_overrides = {}
+# Fixtures are now in conftest.py, no need to define them here.
+# The 'client', 'db_session', and 'authenticated_client' fixtures
+# will be automatically discovered by pytest.
 
 
 @pytest.mark.asyncio
@@ -111,7 +42,7 @@ async def test_register_existing_user(client: AsyncClient):
         "/auth/register",
         json={"email": "existing@example.com", "password": "password123"},
     )
-    # Try to register again with same email
+    # Try to register again with the same email
     response = await client.post(
         "/auth/register",
         json={"email": "existing@example.com", "password": "anotherpassword"},
@@ -129,7 +60,7 @@ async def test_login_for_access_token(client: AsyncClient):
         json={"email": "loginuser@example.com", "password": "loginpassword"},
     )
 
-    # Attempt to login
+    # Now try to log in
     response = await client.post(
         "/auth/token",
         data={"username": "loginuser@example.com", "password": "loginpassword"},
@@ -149,7 +80,7 @@ async def test_login_invalid_credentials(client: AsyncClient):
         json={"email": "wrongpass@example.com", "password": "correctpassword"},
     )
 
-    # Attempt to login with wrong password
+    # Try to login with wrong password
     response = await client.post(
         "/auth/token",
         data={"username": "wrongpass@example.com", "password": "incorrectpassword"},
@@ -171,34 +102,28 @@ async def test_login_non_existent_user(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_read_users_me_authenticated(
-    client: AsyncClient, db_session: AsyncSession
+    authenticated_client: AsyncClient, db_session: AsyncSession
 ):
     """Test /users/me endpoint with an authenticated user."""
-    # Register a user
-    register_response = await client.post(
-        "/auth/register", json={"email": "meuser@example.com", "password": "mepassword"}
-    )
-    assert register_response.status_code == 201
+    # The authenticated_client fixture already ensures a user is created
+    # and the client is set up to act as that user.
+    # The mock user email is 'docuser@example.com' from conftest.py
 
-    # Login to get a token
-    login_response = await client.post(
-        "/auth/token", data={"username": "meuser@example.com", "password": "mepassword"}
-    )
-    token = login_response.json()["access_token"]
-
-    # Call /users/me with the token
-    response = await client.get(
-        "/users/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    # Call /users/me with the authenticated client
+    response = await authenticated_client.get("/users/me")
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "meuser@example.com"
+    assert data["email"] == "docuser@example.com"  # Should match the mock user email
     assert "id" in data
 
 
 @pytest.mark.asyncio
 async def test_read_users_me_unauthenticated(client: AsyncClient):
     """Test /users/me endpoint without authentication."""
+    # This test uses the base 'client' fixture, which does NOT override get_current_user.
+    # Therefore, it should correctly return 401 Unauthorized.
     response = await client.get("/users/me")
     assert response.status_code == 401
-    assert response.json()["detail"] == "Could not validate credentials"
+    assert (
+        response.json()["detail"] == "Not authenticated"
+    )  # Assuming your app returns this detail for 401

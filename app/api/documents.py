@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from typing import List, Optional
 from datetime import datetime
@@ -150,9 +151,9 @@ async def update_document(
     - Ensures the document belongs to the current user.
     """
     result = await db.execute(
-        select(Document).where(
-            Document.id == document_id, Document.owner_id == current_user.id
-        )
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.id == document_id, Document.owner_id == current_user.id)
     )
     db_document = result.scalar_one_or_none()
     if not db_document:
@@ -171,7 +172,9 @@ async def update_document(
     if update_content:
         try:
             # Delete old chunks and embeddings
-            for chunk in db_document.chunks:
+            # Iterate over a copy to avoid issues if collection changes during iteration
+            chunks_to_delete = list(db_document.chunks)
+            for chunk in chunks_to_delete:
                 if chunk.embedding_id:
                     await mock_vector_store.delete_embedding(chunk.embedding_id)
                 await db.delete(chunk)
@@ -223,9 +226,9 @@ async def delete_document(
     - Ensures the document belongs to the current user.
     """
     result = await db.execute(
-        select(Document).where(
-            Document.id == document_id, Document.owner_id == current_user.id
-        )
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.id == document_id, Document.owner_id == current_user.id)
     )
     db_document = result.scalar_one_or_none()
     if not db_document:

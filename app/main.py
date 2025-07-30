@@ -56,7 +56,7 @@ async def root():
     return {"message": "Welcome to the DocuCon API. Visit /docs for API documentation."}
 
 
-@app.on_event("startup")
+@app.router.on_event("startup")
 async def startup_event():
     logger.info("Application starting up...")
 
@@ -67,7 +67,7 @@ async def startup_event():
         logger.info("Database connection successful.")
 
 
-@app.on_event("shutdown")
+@app.router.on_event("shutdown")
 async def shutdown_event():
     logger.info("Application shutting down...")
     # Close database connections if not handled by session manager
