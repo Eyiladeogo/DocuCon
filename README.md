@@ -47,7 +47,7 @@ document_connector/
 
 ```bash
 git clone https://github.com/Eyiladeogo/DocuCon
-cd document_connector
+cd DocuCon
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
