@@ -21,7 +21,7 @@ A simplified document connector and API service built with FastAPI. This service
 ## Project Structure
 
 ```bash
-document_connector/
+DocuCon/
 ├── app/
 │   ├── api/                # API Endpoints (auth, users, documents)
 │   ├── core/               # Config, security, logging, exceptions
@@ -31,6 +31,8 @@ document_connector/
 ├── tests/                  # Unit and integration tests
 ├── .env.example            # Sample environment variables
 ├── requirements.txt        # Python dependencies
+├── Dockerfile              # Docker build instructions
+├── docker-compose.yml      # Docker Compose for web and database
 └── README.md               # Project documentation
 ```
 
@@ -38,51 +40,95 @@ document_connector/
 
 ## Setup Instructions
 
-### 1. Prerequisites
+Follow these steps to run DocuCon locally or via Docker (recommended for consistency).
 
-- Python 3.9+
-- PostgreSQL
+### Prerequisites
 
-### 2. Clone and Install
+- **Python 3.9+** (for local development)
+- **PostgreSQL** (for local development, or use Docker)
+- **Docker Desktop** (for containerized setup)
 
-```bash
-git clone https://github.com/Eyiladeogo/DocuCon
-cd DocuCon
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-pip install -r requirements.txt
-```
+### Environment Variables
 
-### 3. Environment Variables
-
-Create a `.env` file based on `.env.example`:
+Create a `.env` file in the project root based on `.env.example`:
 
 ```env
-DATABASE_URL="postgresql+asyncpg://user:password@db_host:db_port/db_name"
-SECRET_KEY="your-secret"
-ALGORITHM="HS256"
+DATABASE_URL=postgresql+asyncpg://myuser:mypassword@localhost:5432/document_db
+DB_NAME=document_db
+DB_USER=myuser
+DB_PASSWORD=mypassword
+SECRET_KEY=your-secret
+ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-LOG_LEVEL="INFO"
+LOG_LEVEL=INFO
+TEST_DATABASE_URL=postgresql+asyncpg://myuser:mypassword@localhost:5432/test_document_db
 ```
 
-### 4. Database Setup
+For Docker, update `DATABASE_URL` to use the service name `db`:
 
-Make sure PostgreSQL is running and the target database exists. Then run:
-
-```bash
-alembic upgrade head
+```env
+DATABASE_URL="postgresql+asyncpg://myuser:mypassword@db:5432/document_db"
 ```
 
-### 5. Start the App
+### Clone and Install
 
-```bash
-uvicorn app.main:app --reload
-```
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/Eyiladeogo/DocuCon
+   cd DocuCon
+   ```
+
+2. **Local Development (without Docker)**:
+   - Create and activate a virtual environment:
+     ```bash
+     python -m venv venv
+     ```
+     - Windows: `venv\Scripts\activate`
+     - macOS/Linux: `source venv/bin/activate`
+   - Install dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+   - Migrate database:
+     ```bash
+     alembic upgrade head
+     ```
+   - Start the App:
+     ```bash
+     uvicorn app.main:app --reload
+     ```
+
+### Docker Setup (Recommended)
+
+1. **Build Docker images**:
+
+   ```bash
+   docker compose build
+   ```
+
+2. **Start services**:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   _Note_: Use `docker compose up` to view logs in the terminal.
+
+3. **Run database migrations**:
+
+   ```bash
+   docker compose exec web alembic upgrade head
+   ```
+
+4. **Stop services**:
+   ```bash
+   docker compose down -v --remove-orphans
+   ```
+   _Note_: Omit `-v` to preserve database data for quicker restarts.
 
 **Visit [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.**<br>
 **Visit [http://localhost:8000/redoc](http://localhost:8000/redoc) for Redoc UI**
-
----
 
 ## API Overview
 
@@ -133,36 +179,32 @@ uvicorn app.main:app --reload
 - Add rate-limiting to sensitive endpoints
 - Add refresh tokens and RBAC
 - Use a proper secret manager (Vault, AWS Secrets Manager, etc.)
-- Containerize app with Docker
 - Enforce HTTPS via proxy in production
 
 ---
 
 ## Testing
 
-Run all tests using:
+Run tests locally or in Docker for consistent results.
+
+### Local Testing
 
 ```bash
-pytest tests/
+# Activate virtual environment
+export PYTHONPATH=$(pwd)  # For macOS/Linux
+# For Windows (PowerShell): $env:PYTHONPATH = "$(Get-Location)"
+python -m pytest tests/
 ```
 
-> **Troubleshooting:**
-> If you get errors like `ModuleNotFoundError: No module named 'app'` when running tests, set your project root as the `PYTHONPATH` environment variable. For example:
->
-> **In bash or zsh:**
->
-> ```bash
-> export PYTHONPATH="$(pwd)"
-> ```
->
-> **In PowerShell:**
->
-> ```powershell
-> $env:PYTHONPATH = "$(Get-Location)"
-> ```
+### Docker Testing
 
-Test coverage includes:
+```bash
+docker compose up -d
+docker compose exec web python -m pytest tests/
+```
 
-- Token generation and auth flows
+**Test Coverage**:
+
+- Token generation and authentication flows
 - Document chunking and metadata storage
 - Error handling scenarios

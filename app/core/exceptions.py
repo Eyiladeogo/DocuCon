@@ -1,4 +1,9 @@
-from fastapi import HTTPException, status
+import logging
+
+from fastapi import HTTPException, Request, status
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentConnectorException(HTTPException):
@@ -56,3 +61,19 @@ class ForbiddenException(DocumentConnectorException):
 
     def __init__(self, detail: str = "Not enough permissions"):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+
+
+async def http_exception_handler(request: Request, exc: DocumentConnectorException):
+    """
+    Handles custom DocumentConnectorException and its subclasses,
+    returning a standardized JSON response.
+    """
+    logger.error(
+        f"DocumentConnectorException caught: {exc.detail} (Status: {exc.status_code}) "
+        f"for URL: {request.url}"
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=exc.headers,
+    )
